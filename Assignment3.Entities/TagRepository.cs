@@ -11,6 +11,13 @@ public class TagRepository : ITagRepository
 
     public (Response Response, int TagId) Create(TagCreateDTO tag)
     {
+        var conflicts = _context.Tags.Where(t => t.Name == tag.Name).Select(t => t.Id);
+
+        if (conflicts.Any())
+        {
+            return (Response.Conflict, conflicts.First());
+        }
+
         var newTag = new Tag { Name = tag.Name };
         _context.Tags.Add(newTag);
         _context.SaveChanges();
@@ -20,21 +27,39 @@ public class TagRepository : ITagRepository
 
     public Response Delete(int tagId, bool force = false)
     {
-        throw new NotImplementedException();
+        var tag = _context.Tags.Find(tagId);
+
+        if (tag == null) return Response.NotFound;
+
+        _context.Tags.Remove(tag);
+
+        return Response.Deleted;
     }
 
     public TagDTO Read(int tagId)
     {
-        throw new NotImplementedException();
+        var tag = _context.Tags.Find(tagId);
+        return tag != null ? new TagDTO(tag.Id, tag.Name) : null;
     }
 
     public IReadOnlyCollection<TagDTO> ReadAll()
     {
-        throw new NotImplementedException();
+        var tags = _context.Tags
+                            .Select(tag => new TagDTO(tag.Id, tag.Name))
+                            .ToList()
+                            .AsReadOnly();
+
+        return tags;
     }
 
     public Response Update(TagUpdateDTO tag)
     {
-        throw new NotImplementedException();
+        var toUpdate = _context.Tags.Find(tag.Id);
+        if (toUpdate == null) return Response.NotFound;
+
+        toUpdate.Name = tag.Name;
+        _context.SaveChanges();
+
+        return Response.Created;
     }
 }

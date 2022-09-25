@@ -1,14 +1,9 @@
 ﻿var factory = new KanbanContextFactory();
 using var context = factory.CreateDbContext(args);
 
-var tag = new Tag
-{
-    Name = "Test Tag"
-};
-
 // context.Tags.Add(tag);
 // context.SaveChanges();
 
-var test = context.Tags.Find(2).Name;
+var test = context.Tasks.Find(1);
 
 Console.WriteLine(test);

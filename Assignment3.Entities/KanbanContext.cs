@@ -17,22 +17,20 @@ public partial class KanbanContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(100).IsRequired();
             entity.Property(e => e.State).IsRequired();
             entity.Property(e => e.State).HasConversion<string>();
-
             //many to many ref missing
             //like this? V
-            modelBuilder.Entity<Task>()
-            .HasMany(p => p.Tags)
-            .WithMany(p => p.Tasks)
-            .UsingEntity<TaskTag>(
-                j => j
-                .HasOne(pt => pt.Tag)
-                .WithMany(t => t.TaskTags)
-                .HasForeignKey(pt => pt.TagId),
-                j => j
-                .HasOne(pt => pt.Task)
-                .WithMany(p => p.TaskTags)
-                .HasForeignKey(pt => pt.TaskId)
-            );
+            entity.HasMany(p => p.Tags)
+                  .WithMany(p => p.Tasks)
+                  .UsingEntity<TaskTag>(
+                        j => j
+                        .HasOne(pt => pt.Tag)
+                        .WithMany(t => t.TaskTags)
+                        .HasForeignKey(pt => pt.TagId),
+                        j => j
+                        .HasOne(pt => pt.Task)
+                        .WithMany(p => p.TaskTags)
+                        .HasForeignKey(pt => pt.TaskId)
+                    );
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -58,4 +56,12 @@ public partial class KanbanContext : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+    public void Destroy()
+    {
+        Users.RemoveRange(Users);
+        Tasks.RemoveRange(Tasks);
+        Tags.RemoveRange(Tags);
+        SaveChanges();
+    }
 }
