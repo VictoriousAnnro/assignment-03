@@ -59,7 +59,7 @@ public partial class KanbanContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 
-    public void Destroy()
+    public void Clear()
     {
         using var transaction = this.Database.BeginTransaction();
         Users.RemoveRange(Users);

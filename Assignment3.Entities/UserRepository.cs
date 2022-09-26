@@ -11,7 +11,7 @@ public class UserRepository : IUserRepository
 
     public (Response Response, int UserId) Create(UserCreateDTO user)
     {
-        var conflicts = _context.Users.Where(u => u.Name.Equals(user.Email)).Select(u => u.Id);
+        var conflicts = _context.Users.Where(u => u.Email.Equals(user.Email)).Select(u => u.Id);
 
         if (conflicts.Any())
         {
