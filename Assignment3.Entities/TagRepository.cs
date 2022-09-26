@@ -30,8 +30,10 @@ public class TagRepository : ITagRepository
         var tag = _context.Tags.Find(tagId);
 
         if (tag == null) return Response.NotFound;
+        if (tag.Tasks.Count > 0 && !force) return Response.Conflict;
 
         _context.Tags.Remove(tag);
+        _context.SaveChanges();
 
         return Response.Deleted;
     }
@@ -39,7 +41,7 @@ public class TagRepository : ITagRepository
     public TagDTO Read(int tagId)
     {
         var tag = _context.Tags.Find(tagId);
-        return tag != null ? new TagDTO(tag.Id, tag.Name) : null;
+        return tag != null ? new TagDTO(tag.Id, tag.Name) : null!;
     }
 
     public IReadOnlyCollection<TagDTO> ReadAll()
@@ -60,6 +62,6 @@ public class TagRepository : ITagRepository
         toUpdate.Name = tag.Name;
         _context.SaveChanges();
 
-        return Response.Created;
+        return Response.Updated;
     }
 }
