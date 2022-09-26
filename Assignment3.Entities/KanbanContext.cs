@@ -61,9 +61,11 @@ public partial class KanbanContext : DbContext
 
     public void Destroy()
     {
+        using var transaction = this.Database.BeginTransaction();
         Users.RemoveRange(Users);
         Tasks.RemoveRange(Tasks);
         Tags.RemoveRange(Tags);
         SaveChanges();
+        transaction.Commit();
     }
 }
