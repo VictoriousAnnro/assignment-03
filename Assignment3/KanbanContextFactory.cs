@@ -15,8 +15,8 @@ internal class KanbanContextFactory : IDesignTimeDbContextFactory<KanbanContext>
         optionsBuilder.UseNpgsql(connectionString);
 
         var context = new KanbanContext(optionsBuilder.Options);
-        context.Destroy();
-        Seed(context);
+        /* context.Destroy(); */
+        /* Seed(context); */
         return context;
     }
 
