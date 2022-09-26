@@ -1,5 +1,5 @@
 namespace Assignment3.Entities;
 
-public class UserRepository
+public class UserRepository : IUserRepository
 {
 }

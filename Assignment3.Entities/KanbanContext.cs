@@ -10,6 +10,8 @@ public partial class KanbanContext : DbContext
     public virtual DbSet<User> Users { get; set; } = null!;
     public virtual DbSet<Tag> Tags { get; set; } = null!;
 
+    public virtual DbSet<TaskTag> TaskTags { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Task>(entity =>
