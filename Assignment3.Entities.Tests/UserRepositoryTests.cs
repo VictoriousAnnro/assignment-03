@@ -72,16 +72,112 @@ public class UserRepositoryTests : IDisposable
     }
 
     // delete_with_force_deletes_even_if_in_use
+    [Fact]
+    public void Delete_with_the_force_deletes_if_in_use()
+    {
+        var blockingTask = new Task { Title = "Blocker!", State = State.New };
+        var user = new User { Email = "test@itu.dk", Tasks = new HashSet<Task>() { blockingTask } };
+        _context.Users.Add(user);
+        _context.Tasks.Add(blockingTask);
+        _context.SaveChanges();
+        var expected = Response.Deleted;
 
-    // Update returns proper response
-    // Update correctly updates
+        var actual = _repo.Delete(userId: user.Id, force: true);
 
-    // Read if no user found returns null
+        actual.Should().Be(expected);
+    }
 
-    // Read if found returns correct info
+    [Fact]
+    public void Update_updates_information_and_returns_updated()
+    {
+        var user = new User { Name = "TestUser", Email = "test@itu.dk" };
+        _context.Users.Add(user);
+        _context.SaveChanges();
+        var expected = Response.Updated;
 
-    // create, update, delete returns NotFound if not found
+        var actual = _repo.Update(new UserUpdateDTO(user.Id, "ModifiedUser", "ny@email.dk"));
 
-    // readall returns all elements
+        actual.Should().Be(expected);
+        // _context.Users.Find(user.Id).Name.Should().Be("ModifiedUser");
+    }
+
+
+    [Fact]
+    public void Update_updates_user_to_have_new_information_correct()
+    {
+        var user = new User { Name = "Test", Email = "test@itu.dk" };
+        _context.Users.Add(user);
+        _context.SaveChanges();
+
+        var expectedName = "newTestUser";
+        var expectedEmail = "newEmailTest@itu.dk";
+
+        var actual = _repo.Update(new UserUpdateDTO(user.Id, "newTestUser", "newEmailTest@itu.dk"));
+
+        _context.Users.Find(user.Id).Name.Should().Be(expectedName);
+        _context.Users.Find(user.Id).Email.Should().Be(expectedEmail);
+    }
+
+
+    [Fact]
+    public void Read_if_no_user_found_returns_null()
+    {
+        var actual = _repo.Read(6342);
+        actual.Should().Be(null);
+    }
+
+    [Fact]
+    public void Read_returns_correct_info_if_user_found()
+    {
+
+        var user = new User { Name = "testUser", Email = "testUser@itu.dk" };
+        _context.Users.Add(user);
+        _context.SaveChanges();
+
+        var expected = new UserDTO(user.Id, "testUser", "testUser@itu.dk");
+
+        var actual = _repo.Read(user.Id);
+
+        actual.Should().Be(expected);
+    }
+
+
+
+    [Fact]
+    public void ReadAll_should_return_all_elements()
+    {
+
+        var user = new User { Name = "testUser", Email = "testUser@itu.dk" };
+        _context.Users.Add(user);
+        _context.SaveChanges();
+
+        var usersInContext = _context.Users.ToList();
+
+        var usersFromReadAll = _repo.ReadAll();
+
+        var expectedValues = usersInContext.Select(u => (u.Id, u.Name, u.Email));
+        var actualValues = usersFromReadAll.Select(dto => (dto.Id, dto.Name, dto.Email));
+
+        actualValues.Should().BeEquivalentTo(expectedValues);
+    }
+
+
+    [Fact]
+    public void Update_should_return_notFound_if_user_not_found()
+    {
+        var userDTO = new UserUpdateDTO(10, "testUser", "testUser@itu.dk");
+
+        var expected = Response.NotFound;
+
+        var actual = _repo.Update(userDTO);
+
+        actual.Should().Be(expected);
+
+    }
+
+
+    //test stringlength :)
+
+
 
 }
