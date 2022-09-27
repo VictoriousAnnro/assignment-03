@@ -1,14 +1,30 @@
-﻿var factory = new KanbanContextFactory();
-using var context = factory.CreateDbContext(args);
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
-var tag = new Tag
+
+var configuration = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .Build();
+
+var connectionString = configuration.GetConnectionString("Assignment3");
+
+var optionsBuilder = new DbContextOptionsBuilder<KanbanContext>();
+optionsBuilder.UseSqlServer(connectionString);
+
+var options = optionsBuilder.Options;
+
+using var context = new KanbanContext(options);
+
+var user = new User 
 {
-    Name = "Test Tag"
+    Name = "poul",
+    Email = "1234@itu.dk"
 };
 
-// context.Tags.Add(tag);
-// context.SaveChanges();
+await context.Users.AddAsync(user);
 
-var test = context.Tags.Find(2).Name;
+context.SaveChanges();
 
-Console.WriteLine(test);
+var dbuser = context.Users.FirstOrDefault();
+   
+System.Console.WriteLine(dbuser.Name);

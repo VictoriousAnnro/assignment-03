@@ -3,8 +3,8 @@ using System;
 using Assignment3.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,22 +18,21 @@ namespace Assignment3.Entities.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "6.0.9")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
             modelBuilder.Entity("Assignment3.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -47,24 +46,24 @@ namespace Assignment3.Entities.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<int?>("AssignedToId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -73,38 +72,23 @@ namespace Assignment3.Entities.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("Assignment3.Entities.TaskTag", b =>
-                {
-                    b.Property<int>("TagId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("TagId", "TaskId");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("TaskTag");
-                });
-
             modelBuilder.Entity("Assignment3.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -112,6 +96,21 @@ namespace Assignment3.Entities.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TagTask", b =>
+                {
+                    b.Property<int>("TagsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TasksId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TagsId", "TasksId");
+
+                    b.HasIndex("TasksId");
+
+                    b.ToTable("TagTask");
                 });
 
             modelBuilder.Entity("Assignment3.Entities.Task", b =>
@@ -123,33 +122,19 @@ namespace Assignment3.Entities.Migrations
                     b.Navigation("AssignedTo");
                 });
 
-            modelBuilder.Entity("Assignment3.Entities.TaskTag", b =>
+            modelBuilder.Entity("TagTask", b =>
                 {
-                    b.HasOne("Assignment3.Entities.Tag", "Tag")
-                        .WithMany("TaskTags")
-                        .HasForeignKey("TagId")
+                    b.HasOne("Assignment3.Entities.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Assignment3.Entities.Task", "Task")
-                        .WithMany("TaskTags")
-                        .HasForeignKey("TaskId")
+                    b.HasOne("Assignment3.Entities.Task", null)
+                        .WithMany()
+                        .HasForeignKey("TasksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Tag");
-
-                    b.Navigation("Task");
-                });
-
-            modelBuilder.Entity("Assignment3.Entities.Tag", b =>
-                {
-                    b.Navigation("TaskTags");
-                });
-
-            modelBuilder.Entity("Assignment3.Entities.Task", b =>
-                {
-                    b.Navigation("TaskTags");
                 });
 
             modelBuilder.Entity("Assignment3.Entities.User", b =>
