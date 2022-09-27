@@ -1,7 +1,7 @@
 namespace Assignment3.Entities.Tests;
 
 [Collection("Sequential")]
-public class UserRepositoryTests
+public class UserRepositoryTests : IDisposable
 {
     private KanbanContext _context;
 
@@ -16,15 +16,20 @@ public class UserRepositoryTests
         optionsBuilder.UseNpgsql(connectionString);
 
         _context = new KanbanContext(optionsBuilder.Options);
-        _context.Clear();
         _repo = new UserRepository(_context);
+        _context.Database.BeginTransaction();
+    }
+
+    public void Dispose()
+    {
+        _context.Database.RollbackTransaction();
+        _context.Dispose();
     }
 
     [Fact]
     public void Create_when_valid_should_return_created()
     {
         // Arrange
-        using var transaction = _context.Database.BeginTransaction();
         var newUserDTO = new UserCreateDTO(Name: "TestUser", Email: "test@itu.dk");
         var expected = Response.Created;
         // Act
@@ -32,14 +37,12 @@ public class UserRepositoryTests
 
         // Assert
         response.Should().Be(expected);
-        transaction.Rollback();
     }
 
     [Fact]
     public void Create_when_email_already_exists_returns_conflict()
     {
         // Arrange
-        using var transaction = _context.Database.BeginTransaction();
         var conflictingUser = new User { Email = "conflict@itu.dk" };
         _context.Users.Add(conflictingUser);
         _context.SaveChanges();
@@ -51,13 +54,11 @@ public class UserRepositoryTests
 
         // Assert
         actual.Should().Be(expected);
-        transaction.Rollback();
     }
 
     [Fact]
     public void Delete_with_no_force_when_user_in_use_returns_conflict()
     {
-        using var transaction = _context.Database.BeginTransaction();
         var blockingTask = new Task { Title = "Blocker!", State = State.New };
         var user = new User { Email = "test@itu.dk", Tasks = new HashSet<Task>() { blockingTask } };
         _context.Users.Add(user);
@@ -68,7 +69,6 @@ public class UserRepositoryTests
         var actual = _repo.Delete(user.Id);
 
         actual.Should().Be(expected);
-        transaction.Rollback();
     }
 
     // delete_with_force_deletes_even_if_in_use
