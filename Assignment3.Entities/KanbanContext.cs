@@ -10,8 +10,6 @@ public partial class KanbanContext : DbContext
     public virtual DbSet<User> Users { get; set; } = null!;
     public virtual DbSet<Tag> Tags { get; set; } = null!;
 
-    public virtual DbSet<TaskTag> TaskTags { get; set; } = null!;
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Task>(entity =>
@@ -21,18 +19,6 @@ public partial class KanbanContext : DbContext
             entity.Property(e => e.State).HasConversion<string>();
             //many to many ref missing
             //like this? V
-            entity.HasMany(p => p.Tags)
-                  .WithMany(p => p.Tasks)
-                  .UsingEntity<TaskTag>(
-                        j => j
-                        .HasOne(pt => pt.Tag)
-                        .WithMany(t => t.TaskTags)
-                        .HasForeignKey(pt => pt.TagId),
-                        j => j
-                        .HasOne(pt => pt.Task)
-                        .WithMany(p => p.TaskTags)
-                        .HasForeignKey(pt => pt.TaskId)
-                    );
         });
 
         modelBuilder.Entity<User>(entity =>
