@@ -54,6 +54,7 @@ public class TaskRepository : ITaskRepository
     public TaskDetailsDTO Read(int taskId)
     {
         throw new NotImplementedException();
+        // find in context.tasks, create DTO with fields
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAll()
@@ -65,6 +66,7 @@ public class TaskRepository : ITaskRepository
     public IReadOnlyCollection<TaskDTO> ReadAllByState(State state)
     {
         throw new NotImplementedException();
+        // like above but chain .Where 
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByTag(string tag)
@@ -85,5 +87,7 @@ public class TaskRepository : ITaskRepository
     public Response Update(TaskUpdateDTO task)
     {
         throw new NotImplementedException();
+        // find in context and update fields, remember to update StateUpdated if changing state
+        // replace tags in db with tags from dto
     }
 }

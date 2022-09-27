@@ -120,6 +120,8 @@ public class TaskRepositoryTests : IDisposable
 
         var expected = new List<string> { "test", "tester" };
 
+        _repo.Update(taskUpdateDto);
+
         var actual = _context.Tasks.Find(task.Id).Tags.Select(t => t.Name);
 
         actual.Should().BeEquivalentTo(expected);
@@ -137,6 +139,8 @@ public class TaskRepositoryTests : IDisposable
         var taskUpdateDto = new TaskUpdateDTO(task.Id, "tesdtUpdateDTO", null, null, new List<string> { "test", "tester" }, State.New);
 
         var expected = DateTime.UtcNow;
+
+        _repo.Update(taskUpdateDto);
 
         var actual = _context.Tasks.Find(task.Id).StateUpdated;
 
