@@ -105,8 +105,8 @@ public class TaskRepositoryTests : IDisposable
         var actual = _context.Tasks.OrderBy(t => t.Id).Last().Created;
         var actual1 = _context.Tasks.OrderBy(t => t.Id).Last().StateUpdated;
 
-        actual.Should().BeCloseTo(expected, precision: TimeSpan.FromSeconds(5)); // true
-        actual1.Should().BeCloseTo(expected, precision: TimeSpan.FromSeconds(5)); // true
+        actual.Should().BeCloseTo(expected, precision: TimeSpan.FromSeconds(5));
+        actual1.Should().BeCloseTo(expected, precision: TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -130,24 +130,30 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public void Update_changes_stateupdated_to_currenttime()
     {
-        // var task = new Task { Title = "testTask" };
-        // _context.Tasks.Add(task);
-        // _context.SaveChanges();
+        var task = new Task { Title = "testTask" };
+        _context.Tasks.Add(task);
+        _context.SaveChanges();
 
-        // var taskUpdateDto = new TaskUpdateDTO(task.Id, "tesdtUpdateDTO", null, null, new List<string> { "test", "tester" }, State.New);
+        var taskUpdateDto = new TaskUpdateDTO(task.Id, "tesdtUpdateDTO", null, null, new List<string> { "test", "tester" }, State.New);
 
-        // var expected = task.StateUpdated
+        var expected = DateTime.UtcNow;
 
+        var actual = _context.Tasks.Find(task.Id).StateUpdated;
 
+        actual.Should().BeCloseTo(expected, precision: TimeSpan.FromSeconds(5));
     }
 
+    [Fact]
+    public void Create_returns_badrequest_if_assignto_user_dows_not_exist()
+    {
+        var taskDTO = new TaskCreateDTO("testTask", -1, null, new HashSet<string>());
 
+        var expected = (Response.BadRequest, -1);
 
+        var actual = _repo.Create(taskDTO);
 
+        actual.Should().Be(expected);
 
-
-    // Updating the State of a workItem will change the StateUpdated to current time in UTC.
-    // Assigning a user which does not exist should return BadRequest.
-    // WorkItemRepository may not depend on TagRepository or UserRepository.
+    }
 
 }

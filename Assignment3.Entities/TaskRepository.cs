@@ -34,7 +34,21 @@ public class TaskRepository : ITaskRepository
 
     public Response Delete(int taskId)
     {
-        throw new NotImplementedException();
+        var task = _context.Tasks.Find(taskId);
+        if (task == null) return Response.NotFound;
+        if (new[] { State.Resolved, State.Closed, State.Removed }.Contains(task.State)) return Response.Conflict;
+        if (task.State == State.Active)
+        {
+            task.State = State.Removed;
+            _context.SaveChanges();
+
+            return Response.Updated;
+        }
+
+        _context.Tasks.Remove(task);
+        _context.SaveChanges();
+
+        return Response.Deleted;
     }
 
     public TaskDetailsDTO Read(int taskId)
@@ -44,7 +58,8 @@ public class TaskRepository : ITaskRepository
 
     public IReadOnlyCollection<TaskDTO> ReadAll()
     {
-        throw new NotImplementedException();
+        var tasks = _context.Tasks.Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList().AsReadOnly(), task.State));
+        return tasks.ToList().AsReadOnly();
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByState(State state)
