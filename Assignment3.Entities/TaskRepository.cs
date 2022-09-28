@@ -9,7 +9,7 @@ public class TaskRepository : ITaskRepository
         _context = context;
     }
 
-    private TaskDTO TaskDTOFromTask(Task task) => new TaskDTO
+    private static TaskDTO TaskDTOFromTask(Task task) => new TaskDTO
     (
         Id: task.Id,
         Title: task.Title,
@@ -18,7 +18,7 @@ public class TaskRepository : ITaskRepository
         State: task.State
     );
 
-    private TaskDetailsDTO TaskDetailsDTOFromTask(Task task) => new TaskDetailsDTO
+    private static TaskDetailsDTO TaskDetailsDTOFromTask(Task task) => new TaskDetailsDTO
     (
         Id: task.Id,
         Title: task.Title,
@@ -32,8 +32,8 @@ public class TaskRepository : ITaskRepository
 
     private Tag FindOrCreateTag(string tagName)
     {
-        var tagInDB = _context.Tags.Where(t => t.Name.Equals(tagName)).First();
-        if(tagInDB != null) return tagInDB;
+        var tagInDB = _context.Tags.Where(t => t.Name.Equals(tagName));
+        if(tagInDB.Any()) return tagInDB.First();
 
         return new Tag { Name = tagName};
     }
@@ -108,7 +108,8 @@ public class TaskRepository : ITaskRepository
     {
         //find all tasks where the list of tags contain the specified tag
    
-        var taskDTOs = _context.Tasks.Select(task => TaskDTOFromTask(task)) 
+        var taskDTOs = _context.Tasks.Select(task => TaskDTOFromTask(task))
+                                     .ToList()
                                      .Where(task => task.Tags.Contains(tag))
                                      .ToList()
                                      .AsReadOnly();
@@ -148,6 +149,7 @@ public class TaskRepository : ITaskRepository
         curTask.Title = task.Title;
         curTask.AssignedTo = _context.Users.Find(task.AssignedToId);
         curTask.Description = task.Description;
+
         curTask.Tags = task.Tags.Select(name => FindOrCreateTag(name)).ToList();
 
         if(curTask.State != task.State){

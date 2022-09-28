@@ -136,7 +136,7 @@ public class TaskRepositoryTests : IDisposable
         _context.Tasks.Add(task);
         _context.SaveChanges();
 
-        var taskUpdateDto = new TaskUpdateDTO(task.Id, "tesdtUpdateDTO", null, null, new List<string> { "test", "tester" }, State.New);
+        var taskUpdateDto = new TaskUpdateDTO(task.Id, "tesdtUpdateDTO", null, null, new List<string> { "test", "tester" }, State.Active);
 
         var expected = DateTime.UtcNow;
 
@@ -192,17 +192,19 @@ public class TaskRepositoryTests : IDisposable
         _context.Tasks.Add(task3);
         _context.SaveChanges();
 
-        var tasksWithTagsFromContext = _context.Tasks.OrderBy(t => t.Id).Reverse().Take(3).ToList();
-        var taskIdsWithTag1 = new [] { tasksWithTagsFromContext[0].Id, tasksWithTagsFromContext[2].Id };
-        var taskIdsWithTag2 = new [] { tasksWithTagsFromContext[0].Id, tasksWithTagsFromContext[1].Id };
-        var taskIdsWithTag3 = new [] { tasksWithTagsFromContext[1].Id, tasksWithTagsFromContext[2].Id };
+        var taskIdsWithTag1 = new [] {task1.Id, task3.Id};
+        var taskIdsWithTag2 = new [] {task2.Id, task3.Id};
+        var taskIdsWithTag3 = new [] {task1.Id, task2.Id};
 
-        var actual1 = _repo.ReadAllByTag("test").Select(t => t.Id);
-        var actual2 = _repo.ReadAllByTag("test2").Select(t => t.Id);
-        var actual3 = _repo.ReadAllByTag("test3").Select(t => t.Id);
+        var actual1 = _repo.ReadAllByTag("test").ToList().Select(t => t.Id);
+        var actual2 = _repo.ReadAllByTag("test2").ToList().Select(t => t.Id);
+        var actual3 = _repo.ReadAllByTag("test3").ToList().Select(t => t.Id);
 
         actual1.Should().BeEquivalentTo(taskIdsWithTag1);
         actual2.Should().BeEquivalentTo(taskIdsWithTag2);
         actual3.Should().BeEquivalentTo(taskIdsWithTag3);
     }
+    
+    /*[Fact]
+    public void */
 }
