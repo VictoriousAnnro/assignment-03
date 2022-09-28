@@ -53,25 +53,38 @@ public class TaskRepository : ITaskRepository
 
     public TaskDetailsDTO Read(int taskId)
     {
-        throw new NotImplementedException();
+        var task = _context.Tasks.Find(taskId);
+        return task != null ? new TaskDetailsDTO(taskId, task.Title, task.Description, task.Created,  task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList().AsReadOnly(), task.State, task.StateUpdated) : null!;
+   
         // find in context.tasks, create DTO with fields
+        //maybe
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAll()
     {
-        var tasks = _context.Tasks.Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList().AsReadOnly(), task.State));
-        return tasks.ToList().AsReadOnly();
+        var taskDTOs = _context.Tasks.Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList().AsReadOnly(), task.State));
+        return taskDTOs.ToList().AsReadOnly();
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByState(State state)
     {
-        throw new NotImplementedException();
+       var tasksWithState = _context.Tasks
+                            .Where(task => task.State == state)
+                            .Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList(), task.State));
+        return tasksWithState.ToList().AsReadOnly();
         // like above but chain .Where 
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByTag(string tag)
     {
-        throw new NotImplementedException();
+      //find all tasks where the list of tags contain the specified tag
+   
+        var taskDTOs = _context.Tasks.Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList(), task.State))
+                                     .Where(task => task.Tags.Contains(tag))
+                                     .ToList()
+                                     .AsReadOnly();
+
+        return taskDTOs;
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByUser(int userId)
