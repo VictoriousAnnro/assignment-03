@@ -160,4 +160,49 @@ public class TaskRepositoryTests : IDisposable
 
     }
 
+    [Fact]
+    public void ReadAll_should_return_all_elements()
+    {
+        var task = new Task {Title = "testTitle"};
+        _context.Tasks.Add(task);
+        _context.SaveChanges();
+
+        var tasksInContext = _context.Tasks.ToList();
+
+        var tasksFromReadAll = _repo.ReadAll();
+
+        var expectedValues = tasksInContext.Select(t => t.Title);
+        var actualValues = tasksFromReadAll.Select(t => t.Title);
+
+        actualValues.Should().BeEquivalentTo(expectedValues);
+    }
+
+    [Fact]
+    public void ReadAllByTag_should_return_all_elements_with_given_tag()
+    {
+        var testTag1 = new Tag {Name = "test"};
+        var testTag2 = new Tag {Name = "test2"};
+        var testTag3 = new Tag {Name = "test3"};
+        
+        var task1 = new Task {Title = "testTitle", Tags = new HashSet<Tag>(new Tag[] { testTag1, testTag3} )};
+        var task2 = new Task {Title = "testTitle2", Tags = new HashSet<Tag>(new Tag[] { testTag2, testTag3} )};
+        var task3 = new Task {Title = "testTitle3", Tags = new HashSet<Tag>(new Tag[] { testTag1, testTag2} )};
+        _context.Tasks.Add(task1);
+        _context.Tasks.Add(task2);
+        _context.Tasks.Add(task3);
+        _context.SaveChanges();
+
+        var tasksWithTagsFromContext = _context.Tasks.OrderBy(t => t.Id).Reverse().Take(3).ToList();
+        var taskIdsWithTag1 = new [] { tasksWithTagsFromContext[0].Id, tasksWithTagsFromContext[2].Id };
+        var taskIdsWithTag2 = new [] { tasksWithTagsFromContext[0].Id, tasksWithTagsFromContext[1].Id };
+        var taskIdsWithTag3 = new [] { tasksWithTagsFromContext[1].Id, tasksWithTagsFromContext[2].Id };
+
+        var actual1 = _repo.ReadAllByTag("test").Select(t => t.Id);
+        var actual2 = _repo.ReadAllByTag("test2").Select(t => t.Id);
+        var actual3 = _repo.ReadAllByTag("test3").Select(t => t.Id);
+
+        actual1.Should().BeEquivalentTo(taskIdsWithTag1);
+        actual2.Should().BeEquivalentTo(taskIdsWithTag2);
+        actual3.Should().BeEquivalentTo(taskIdsWithTag3);
+    }
 }

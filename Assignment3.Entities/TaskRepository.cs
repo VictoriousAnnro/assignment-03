@@ -9,11 +9,40 @@ public class TaskRepository : ITaskRepository
         _context = context;
     }
 
+    private TaskDTO TaskDTOFromTask(Task task) => new TaskDTO
+    (
+        Id: task.Id,
+        Title: task.Title,
+        AssignedToName: task.AssignedTo != null ? task.AssignedTo.Name : "",
+        Tags: task.Tags.Select(t => t.Name).ToList().AsReadOnly(),
+        State: task.State
+    );
+
+    private TaskDetailsDTO TaskDetailsDTOFromTask(Task task) => new TaskDetailsDTO
+    (
+        Id: task.Id,
+        Title: task.Title,
+        Description: task.Description != null ? task.Description : "",
+        Created: task.Created,
+        StateUpdated: task.StateUpdated,
+        AssignedToName: task.AssignedTo != null ? task.AssignedTo.Name : "",
+        Tags: task.Tags.Select(t => t.Name).ToList().AsReadOnly(),
+        State: task.State
+    );
+
+    private Tag FindOrCreateTag(string tagName)
+    {
+        var tagInDB = _context.Tags.Where(t => t.Name.Equals(tagName)).First();
+        if(tagInDB != null) return tagInDB;
+
+        return new Tag { Name = tagName};
+    }
+
     public (Response Response, int TaskId) Create(TaskCreateDTO task)
     {
         var assignedUser = task.AssignedToId != null ? _context.Users.Find(task.AssignedToId) : null!;
         if (assignedUser == null && task.AssignedToId != null) return (Response.BadRequest, -1);
-        var tags = task.Tags.Select(t => new Tag { Name = t }).ToHashSet();
+        var tags = task.Tags.Select(t => FindOrCreateTag(t)).ToHashSet();
 
         var newTask = new Task
         {
@@ -54,7 +83,7 @@ public class TaskRepository : ITaskRepository
     public TaskDetailsDTO Read(int taskId)
     {
         var task = _context.Tasks.Find(taskId);
-        return task != null ? new TaskDetailsDTO(taskId, task.Title, task.Description, task.Created,  task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList().AsReadOnly(), task.State, task.StateUpdated) : null!;
+        return task != null ? TaskDetailsDTOFromTask(task) : null!;
    
         // find in context.tasks, create DTO with fields
         //maybe
@@ -62,24 +91,24 @@ public class TaskRepository : ITaskRepository
 
     public IReadOnlyCollection<TaskDTO> ReadAll()
     {
-        var taskDTOs = _context.Tasks.Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList().AsReadOnly(), task.State));
+        var taskDTOs = _context.Tasks.Select(task => TaskDTOFromTask(task));
         return taskDTOs.ToList().AsReadOnly();
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByState(State state)
     {
-       var tasksWithState = _context.Tasks
+        var tasksWithState = _context.Tasks
                             .Where(task => task.State == state)
-                            .Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList(), task.State));
+                            .Select(task => TaskDTOFromTask(task)); 
         return tasksWithState.ToList().AsReadOnly();
         // like above but chain .Where 
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllByTag(string tag)
     {
-      //find all tasks where the list of tags contain the specified tag
+        //find all tasks where the list of tags contain the specified tag
    
-        var taskDTOs = _context.Tasks.Select(task => new TaskDTO(task.Id, task.Title, task.AssignedTo.Name, task.Tags.Select(t => t.Name).ToList(), task.State))
+        var taskDTOs = _context.Tasks.Select(task => TaskDTOFromTask(task)) 
                                      .Where(task => task.Tags.Contains(tag))
                                      .ToList()
                                      .AsReadOnly();
@@ -89,18 +118,44 @@ public class TaskRepository : ITaskRepository
 
     public IReadOnlyCollection<TaskDTO> ReadAllByUser(int userId)
     {
-        throw new NotImplementedException();
+        //find all tasks that are assigned to the specified userId
+        var byUser = _context.Users.Find(userId);
+        if(byUser == null) return new List<TaskDTO>().AsReadOnly();
+
+        var taskDTOs = _context.Tasks.Where(task => byUser.Id == userId)
+                                     .Select(task => TaskDTOFromTask(task))
+                                     .ToList()
+                                     .AsReadOnly();
+
+        return taskDTOs;
+
     }
 
     public IReadOnlyCollection<TaskDTO> ReadAllRemoved()
     {
-        throw new NotImplementedException();
+        //find all tasks with state = Removed
+        var tasksWithStateRemoved = _context.Tasks
+                            .Where(task => task.State == State.Removed)
+                            .Select(task => TaskDTOFromTask(task));
+        return tasksWithStateRemoved.ToList().AsReadOnly();;
     }
 
     public Response Update(TaskUpdateDTO task)
     {
-        throw new NotImplementedException();
-        // find in context and update fields, remember to update StateUpdated if changing state
-        // replace tags in db with tags from dto
+        var curTask = _context.Tasks.Find(task.Id);
+        if (curTask == null) return Response.NotFound;
+
+        curTask.Title = task.Title;
+        curTask.AssignedTo = _context.Users.Find(task.AssignedToId);
+        curTask.Description = task.Description;
+        curTask.Tags = task.Tags.Select(name => FindOrCreateTag(name)).ToList();
+
+        if(curTask.State != task.State){
+            curTask.State = task.State;
+            curTask.StateUpdated = DateTime.UtcNow;
+        }
+        
+        _context.SaveChanges();
+        return Response.Updated;
     }
 }
