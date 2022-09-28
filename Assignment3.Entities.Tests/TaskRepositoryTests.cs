@@ -205,6 +205,16 @@ public class TaskRepositoryTests : IDisposable
         actual3.Should().BeEquivalentTo(taskIdsWithTag3);
     }
     
-    /*[Fact]
-    public void */
+    [Fact]
+    public void Read_should_return_TaskDetailsDTO_from_taskId(){
+        var task = new Task {Title = "tester"};
+
+        _context.Tasks.Add(task);
+        _context.SaveChanges();
+
+        var actual = _repo.Read(task.Id);
+        var expected = new TaskDetailsDTO(task.Id, "tester", "", new DateTime(0001, 01, 01), "", new HashSet<string>(), State.New, new DateTime(0001, 01, 01));
+
+        actual.Should().BeEquivalentTo(expected);
+    }
 }
