@@ -11,7 +11,7 @@ stateDiagram
 	state "Workflow failed" as failed
 	state "Workflow succeeded" as success
 	[*] --> wait_for_commit
-	wait_for_commit --> validate_branch: push
+	wait_for_commit --> validate_branch: commit 
 	wait_for_commit --> validate_branch: pull request
 	validate_branch --> wait_for_commit: untracked branch
 	validate_branch --> build
